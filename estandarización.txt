@@ -1,0 +1,44 @@
+Reglas para la nomenclatura de COESPRIS
+
+Todos los archivos tendrán extensión ".php"
+
+Todos los menús tienen como nomenclatura
+	menu_<tipo_menu>.php
+	TIPO_MENU:
+	- principal
+	- encargado
+	- comisionado
+	- contador
+
+Archivos especiales
+	- config.php
+	- conexion.php	¡Nuevo!	2015-01-17
+	- funciones.php ¡Nuevo!	2015-01-17
+
+Formato para incrustación de HTML
+	sec_<sección>.inc.php
+	Ejemplos: sec_encabezado.inc.php, sec_piepagina.inc.php
+	
+Formato para reportes PDF
+	rep_<nombre_reporte>.php
+
+Formato para las operaciones del sistema:
+	<objeto>_<acción>.php
+
+Diccionario de ACCIONES:
+ - Formulario de agregar	----> registrar
+ - Insertar a base de datos	----> insertar
+ - Consulta general			----> general
+ - Consulta de busqueda		----> buscar
+ - Consulta individual det.	----> detalle
+ - Formulario de actualizar	----> editar
+ - Actualizar a B.D.		----> actualizar
+ - Eliminar en la B.D.		----> eliminar
+ 
+Toda incrustación de variables se hace con 'short-tags':
+	Utilización:
+		<?=$variable?>
+	Ejemplos:
+		<td><?=$fila['dato']?></td>
+		<option value='<?=$fila['id']?>'><?=$fila['nombre']?></option>
+	

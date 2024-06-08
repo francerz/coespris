@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang='es'>
+<head>
+	<meta charset='utf-8'/>
+	<meta http-equiv='X-UA-Compatible' content='IE=Edge'/>
+	<meta name='viewport' content='width=device-width, initial-scale=1.0' />
+	<title>Práctica Formulario</title>
+</head>
+<body>
+	<header>
+		<div class='wrapper'>
+		</div>
+	</header>
+	<nav>
+	</nav>
+	<div id='content'>
+		<div class='wrapper'>
+			<form method='POST' action='insertar.php'>
+				<label for='inpNombre'>Nombre:</label>
+				<input id='inpNombre' type='text' name='nombre' size='10' maxlength='20' />
+				<!-- -->
+				<label for='inpFecha'>Fecha:</label>
+				<input id='inpFecha' type='date' name='fecha' placeholder='aaaa-mm-dd'/>
+				<label for='inpHora'>Hora:</label>
+				<input id='inpHora' type='time' name='hora' placeholder='HH:mm' />
+				<label for='inpNumero'>Número:</label>
+				<input id='inpNumero' type='number' name='numero'/>
+				<!-- Radio buttons -->
+				Selecciona uno:<br/>
+				<label><input type='radio' name='fruta' value='manzana'>Manzana</label>
+				<label><input type='radio' name='fruta' value='naranja'>Naranja</label>
+				<label><input type='radio' name='fruta' value='durazno'>Durazno</label>
+				<!-- Entrada de archivos -->
+				<label for='inpArchivo'>Documento de ejemplo:</label>
+				<input id='inpArchivo' type='file' name='archivo' accept='application/pdf' />
+				<!-- TIPOS MIME -->
+				<!-- image/*, image/png, image/jpeg, application/pdf -->
+				<!-- Uso de COMBO BOX -->
+				<select name='animal' size='1'>
+					<option value='1'>Gato</option>
+					<option value='2'>Perro</option>
+					<option value='3'>Pez</option>
+				</select>
+				<!-- -->
+				<input type='submit' value='Grabar' />
+				<button type='submit'><img src='/evaluacion/thm/flat/img/build2.png'></button>
+			</form>
+		</div>
+	</div>
+	<footer>
+		<div class='wrapper'>
+		</div>
+	</footer>
+</body>
+</html>

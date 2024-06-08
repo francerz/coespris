@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset='utf-8' />
+</head>
+<body>
+	<form>
+		<label for='inpApeP'>Apellido paterno:</label>
+		<input id='inpApeP' name='ape_paterno' type='text' /><br/>
+		<label for='inpApeM'>Apellido materno:</label>
+		<input id='inpApeM' name='ape_materno' type='text' /><br/>
+		<label for='inpNombre'>Nombre(s):</label>
+		<input id='inpNombre' name='nombres' type='text' /><br/>
+		<!--
+			SI EL NAVEGADOR NO SOPORTA INPUT TYPE='DATE'
+			UTILIZAR PREFERENTEMENTE FORMATO 'aaaa-mm-dd'
+			(año[4 dígitos]-mes[2 dígitos]-dia[2 dígitos])
+		-->
+		<label for='inpFNac'>Fecha de nacimiento:</label>
+		<input id='inpFNac' name='fecha_nac' type='date' placeholder='aaaa-mm-dd' /><br/>
+		<!-- SIGUIENDO EL ESTÁNDAR ISO/IEC 5218 -->
+		<label for='selSexo'>Sexo:</label>
+		<select id='selSexo' name='sexo'>
+			<option value='0'>No especificado</option>
+			<option value='1'>Hombre</option>
+			<option value='2'>Mujer</option>
+			<option value='9'>No aplicable</option>
+		</select><br/>
+		<!-- ABREVIATURA BASADA EN LA RENAPO -->
+		<label for='selEntidad'>Entidad federativa:</label>
+		<select id='selEntidad' name='entidad'>
+			<option value=''>[Seleccionar uno]</option>
+			<option value='NE' class='special'>Nacido Extranjero</option>
+			<option value='AS'>Aguascalientes</option>
+			<option value='BC'>Baja California (norte)</option>
+			<option value='BS'>Baja California Sur</option>
+			<option value='CC'>Campeche</option>
+			<option value='CS'>Chiapas</option>
+			<option value='CH'>Chihuahua</option>
+			<option value='CL'>Coahuila</option>
+			<option value='CM'>Colima</option>
+			<option value='DF'>Distrito Federal</option>
+			<option value='DG'>Durango</option>
+			<option value='GT'>Guanajuato</option>
+			<option value='GR'>Gerrero</option>
+			<option value='HG'>Hidalgo</option>
+			<option value='JC'>Jalisco</option>
+			<option value='MC'>Estado de México</option>
+			<option value='MN'>Michoacán</option>
+			<option value='MS'>Morelos</option>
+			<option value='NT'>Nayarit</option>
+			<option value='NL'>Nuevo León</option>
+			<option value='OC'>Oaxaca</option>
+			<option value='PL'>Puebla</option>
+			<option value='QT'>Queretaro</option>
+			<option value='QR'>Quintana Roo</option>
+			<option value='SP'>San Luis Potosí</option>
+			<option value='SL'>Sinaloa</option>
+			<option value='SR'>Sonora</option>
+			<option value='TC'>Tabasco</option>
+			<option value='TS'>Tamaulipas</option>
+			<option value='TL'>Tlaxcala</option>
+			<option value='VZ'>Veracruz</option>
+			<option value='YN'>Yucatán</option>
+			<option value='ZS'>Zacatecas</option>
+		</select><br/>
+		<button id='btnGenerate'>Generar</button>
+	</form>
+	<script>
+		String.prototype.replaceAt=function(index, character) {
+    		return this.substr(0, index) + character + this.substr(index+character.length);
+		}
+		var claves = {
+			"vowelRegex"	: /^[AEIOU]*$/gi,
+			"consonantRegex": /^([B-DF-HJ-NP-TV-Z]|Ñ)*$/gi,
+			"clearRegex"	: /\b(DAS|DA|DEL|DER|DE|DIE|DI|DD|LAS|LA|LOS|EL|LES|LE|MAC|MC|VAN|VON|Y)\s+/g,
+			"charValueVerifyCurp" : {
+				'.': 0,
+				'0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9,
+				'A':10, 'B':11, 'C':12, 'D':13, 'E':14, 'F':15, 'G':16, 'H':17, 'I':18, 'J':19,
+				'K':20, 'L':21, 'M':22, 'Ñ':23, 'N':24, 'O':25, 'P':26, 'Q':27, 'R':28, 'S':29,
+				'T':30, 'U':31, 'V':32, 'W':33, 'X':34, 'Y':35, 'Z':36
+			},
+			"charValuesRfc"	: {
+				" ":"00", "0":"00", "1":"01", "2":"02", "3":"03", "4":"04", "5":"05", "6":"06", "7":"07", "8":"08",
+				"9":"09", "&":"10", "A":"11", "B":"12", "C":"13", "D":"14", "E":"15", "F":"16", "G":"17", "H":"18",
+				"I":"19", "J":"21", "K":"22", "L":"23", "M":"24", "N":"25", "O":"26", "P":"27", "Q":"28", "R":"29",
+				"S":"32", "T":"33", "U":"34", "V":"35", "W":"36", "X":"37", "Y":"38", "Z":"39", "Ñ":"40"
+			},
+			"valuesCodesRfc" : {
+				 0:"1",  1:"2",  2:"3",  3:"4",  4:"5",  5:"6",  6:"7",  7:"8",  8:"9",  9:"A",
+				10:"B", 11:"C", 12:"D", 13:"E", 14:"F", 15:"G", 16:"H", 17:"I", 18:"J", 19:"K",
+				20:"L", 21:"M", 22:"N", 23:"P", 24:"Q", 25:"R", 26:"S", 27:"T", 28:"U", 29:"V",
+				30:"W", 31:"X", 32:"Y", 33:"Z"
+			},
+			"charValueVerifyRfc" : {
+				"0": 0,	"1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9,
+				"A":10, "B":11, "C":12, "D":13, "E":14, "F":15, "G":16, "H":17, "I":18, "J":19,
+				"K":20, "L":21, "M":22, "N":23, "&":24, "O":25, "P":26, "Q":27, "R":28, "S":29,
+				"T":30, "U":31, "V":32, "W":33, "X":34, "Y":35, "Z":36, " ":37, "Ñ":38
+
+			},
+			"inconvenient4"	: [
+				'BACA','BAKA','BUEI','BUEY','CACA','CACO','CAGA','CAGO','CAKA','CAKO',
+				'COGE','COGI','COJA','COJE','COJI','COJO','COLA','CULO','FALO','FETO',
+				'GETA','GUEI','GUEY','JETA','JOTO','KACA','KACO','KAGA','KAGO','KAKA',
+				'KAGO','KAKA','KAKO','KOGE','KOGI','KOJA','KOJE','KOJI','KOJO','KOLA',
+				'KULO','LILO','LOCA','LOCO','LOKA','LOKO','MAME','MAMO','MEAR','MEAS',
+				'MEON','MIAR','MION','MOCO','MOKO','MULA','MULO','NACA','NACO','PEDA',
+				'PEDO','PENE','PIPI','PITO','POPO','PUTA','PUTO','QULO','RATA','ROBA',
+				'ROBE','ROBO','RUIN','SENO','TETA','VACA','VAGA','VAGO','VAKA','VUEI',
+				'VUEY','WUEI','WUEY'
+			],
+			"filterName"	: function (name, also_enie) {
+				name = name.trim().toUpperCase();
+				if (also_enie) {
+					name = name.replace(/(Ñ)/g,'X');
+				}
+				name = name.replace(claves.clearRegex,'');
+				return name.trim();
+			},
+			"quitarAcentos" : function (name) {
+				name = name.replace('Á','A').replace('É','E').replace('Í','I').replace('Ó','O').replace('Ú','U');
+				name = name.replace('á','a').replace('é','e').replace('í','i').replace('ó','o').replace('ú','u');
+				return name;
+			},
+			"isVowel"		: function (character) {
+				return character.match(claves.vowelRegex);
+			},
+			"isConsonant"	: function (character) {
+				return character.match(claves.consonantRegex);
+			},
+			"getFirstOf"	: function (name, offset, val_fnc) {
+				for (var i = offset; i < name.length; i++) {
+					if (val_fnc(name.charAt(i))) {
+						return name.charAt(i);
+					}
+				}
+				return '';
+			},
+			"generaCurp"	: function (ape_paterno, ape_materno, nombres, fecha_nacimiento, sexo,  estado) {
+				ape_paterno = claves.quitarAcentos(claves.filterName(ape_paterno, true));
+				ape_materno = claves.quitarAcentos(claves.filterName(ape_materno, true));
+				nombres = claves.quitarAcentos(claves.filterName(nombres, true));
+				// alert(nombres);
+
+				var curp = "";
+				var sexStr = 'X';
+				if (sexo == 1) {
+					sexStr = 'H';
+					nombres = nombres.replace(/^(JOS(É|E)|J\.|J)(\s)+/gi,'');
+				} else if (sexo == 2) {
+					sexStr = 'M';
+					nombres = nombres.replace(/^(MAR(Í|I)A|MA\.|MA|M\.|M)(\s)+/gi,'');
+				}
+				var inner_vowel = claves.getFirstOf(ape_paterno,1,claves.isVowel);
+				curp += ape_paterno.charAt(0);
+				curp += inner_vowel != '' ? inner_vowel : 'X';
+				curp += ape_materno.length > 0 ? ape_materno.charAt(0) : 'X';
+				curp += nombres.charAt(0);
+				if (claves.inconvenient4.indexOf(curp) != -1) {
+					curp = curp.replaceAt(1,'X');
+				}
+
+				curp += fecha_nacimiento.getFullYear().toString().substr(2);
+				curp += fecha_nacimiento.getMonth() < 9 ? '0' + (fecha_nacimiento.getMonth()+1) : (fecha_nacimiento.getMonth()+1);
+				curp += fecha_nacimiento.getDate() < 9 ? '0' + (fecha_nacimiento.getDate()+1) : (fecha_nacimiento.getDate()+1);
+				curp += sexStr;
+				curp += estado;
+				var inner_cons = claves.getFirstOf(ape_paterno,1,claves.isConsonant)
+				curp += inner_cons != '' ? inner_cons : 'X';
+				inner_cons = claves.getFirstOf(ape_materno,1,claves.isConsonant);
+				curp += inner_cons != '' ? inner_cons : 'X';
+				inner_cons = claves.getFirstOf(nombres,1,claves.isConsonant);
+				curp += inner_cons != '' ? inner_cons : 'X';
+
+				curp += '.';
+				var j = 18, suma_curp = 0;
+				for (var i = 0; i < curp.length; i++) {
+					suma_curp += (claves.charValueVerifyCurp[curp.charAt(i)] * j--);
+				}
+				curp += Math.abs(suma_curp % 10 - 10) % 10;
+				return curp.toUpperCase();
+			},
+			"generaRfc"		: function (ape_paterno, ape_materno, nombres, fecha_nacimiento) {
+
+				ape_paterno = claves.quitarAcentos(claves.filterName(ape_paterno));
+				ape_materno = claves.quitarAcentos(claves.filterName(ape_materno));
+				nombres = claves.quitarAcentos(claves.filterName(nombres));
+
+
+				var suma_str = 0;
+				var calc_str = "0";
+				for(var i = 0; i < ape_paterno.length; i++) {
+					calc_str += claves.charValuesRfc[ape_paterno.charAt(i)];
+				}
+				for (var i = 1; i < calc_str.length; i++) {
+					suma_str += parseInt(calc_str.charAt(i-1) + calc_str.charAt(i)) * parseInt(calc_str.charAt(i));
+				}
+				calc_str = "0";
+				for(var i = 0; i < ape_materno.length; i++) {
+					calc_str += claves.charValuesRfc[ape_materno.charAt(i)];
+				}
+				for (var i = 1; i < calc_str.length; i++) {
+					suma_str += parseInt(calc_str.charAt(i-1) + calc_str.charAt(i)) * parseInt(calc_str.charAt(i));
+				}
+				calc_str = "0";
+				for(var i = 0; i < nombres.length; i++) {
+					calc_str += claves.charValuesRfc[nombres.charAt(i)];
+				}
+				for (var i = 1; i < calc_str.length; i++) {
+					suma_str += parseInt(calc_str.charAt(i-1) + calc_str.charAt(i)) * parseInt(calc_str.charAt(i));
+				}
+				var last_three_digits = suma_str % 1000;
+				// alert(nombres);
+
+				var rfc = "", inner_vowel = "";
+				nombres = nombres.replace(/^(JOS(É|E))(\s)+/g,'');
+				nombres = nombres.replace(/^(MAR(Í|I)A)(\s)+/g,'');
+				if (ape_paterno != "" && ape_materno != "") {
+					inner_vowel = claves.getFirstOf(ape_paterno,1,claves.isVowel);
+					rfc += ape_paterno.charAt(0);
+					rfc += inner_vowel != '' ? inner_vowel : 'X';
+					rfc += ape_materno.length > 0 ? ape_materno.charAt(0) : 'X';
+					rfc += nombres.charAt(0);
+					rfc = rfc.toUpperCase();
+				} else if (ape_paterno != "") {
+					inner_vowel = claves.getFirstOf(ape_paterno,1,claves.isVowel);
+					rfc += ape_paterno.charAt(0);
+					rfc += inner_vowel != '' ? inner_vowel : 'X';
+					inner_vowel = claves.getFirstOf(nombres,1,claves.isVowel);
+					rfc += nombres.charAt(0);
+					rfc += inner_vowel != '' ? inner_vowel : 'X';
+				} else if (ape_materno != "") {
+					inner_vowel = claves.getFirstOf(ape_materno,1,claves.isVowel);
+					rfc += ape_materno.charAt(0);
+					rfc += inner_vowel != '' ? inner_vowel : 'X';
+					inner_vowel = claves.getFirstOf(nombres,1,claves.isVowel);
+					rfc += nombres.charAt(0);
+					rfc += inner_vowel != '' ? inner_vowel : 'X';
+				}
+				if (claves.inconvenient4.indexOf(rfc) != -1) {
+					rfc = rfc.replaceAt(3,'X');
+				}
+				rfc += fecha_nacimiento.getFullYear().toString().substr(2);
+				rfc += fecha_nacimiento.getMonth() < 9 ? '0' + (fecha_nacimiento.getMonth()+1) : (fecha_nacimiento.getMonth()+1);
+				rfc += fecha_nacimiento.getDate() < 9 ? '0' + (fecha_nacimiento.getDate()+1) : (fecha_nacimiento.getDate()+1);
+
+				rfc += claves.valuesCodesRfc[Math.floor(last_three_digits / 34)];
+				rfc += claves.valuesCodesRfc[last_three_digits % 34];
+
+				var j = 13, suma_rfc = 0;
+				for (var i = 0; i < rfc.length; i++) {
+					suma_rfc += (claves.charValueVerifyRfc[rfc.charAt(i)] * j--);
+				}
+				var residuo_verificador = suma_rfc % 11;
+				if (residuo_verificador > 0) {
+					residuo_verificador = 11 -residuo_verificador;
+					if (residuo_verificador === 10) {
+						rfc += 'A';
+					} else {
+						rfc += residuo_verificador;
+					}
+				} else {
+					rfc += '0';
+				}
+				return rfc;
+			},
+			"verificaCurp"	: function(curp) {
+				// Params cleanup
+				curp = curp.trim().toUpperCase();
+				// Length validation
+				if (curp.length !== 18) {
+					return false;
+				}
+				// Exhaust validation
+				var last_digit = curp.charAt(17);
+				var j = 18;
+				var suma_curp = 0;
+				var should_digit = '0';
+				for (var i = 0; i < 17; i++) {
+					suma_curp += (claves.charValueVerifyCurp[curp.charAt(i)] * j--);
+				}
+				should_digit = (Math.abs(suma_curp % 10 - 10) % 10).toString();
+				return (should_digit === last_digit);
+			},
+			"verificaRfc"	: function(rfc , homologado_required) {
+				// Params cleanup
+				rfc = rfc.trim().toUpperCase();
+				// Length validation
+				if (!homologado_required && rfc.length === 10) {
+					return true;
+				}
+				if (rfc.length !== 13) {
+					return false;
+				}
+				// Exhaust validation
+				var last_char = rfc.charAt(12);
+				var should_char = '0';
+				var j = 13
+				var suma_rfc = 0;
+				for (var i = 0; i < 12; i++) {
+					suma_rfc += (claves.charValueVerifyRfc[rfc.charAt(i)] * j--);
+				}
+				var residuo_verificador = suma_rfc % 11;
+				if (residuo_verificador > 0) {
+					residuo_verificador = 11 - residuo_verificador;
+					if (residuo_verificador === 10) {
+						should_char = 'A';
+					} else {
+						should_char = residuo_verificador.toString();
+					}
+				} else {
+					should_char = '0';
+				}
+				return (last_char === should_char);
+			}
+		};
+		var btnGenerate = document.getElementById('btnGenerate');
+		btnGenerate.addEventListener('click',function(e){
+			e.preventDefault();
+			generarCurp();
+		});
+		function generarCurp() {
+			var nombre = document.getElementById('inpNombre').value;
+			var ape_paterno = document.getElementById('inpApeP').value;
+			var ape_materno = document.getElementById('inpApeM').value;
+			var sexo = document.getElementById('selSexo').value;
+			var fecha_nacimiento = new Date(document.getElementById('inpFNac').value);
+			var estado = document.getElementById('selEntidad').value;
+			var curp = document.getElementById('inpCURP').value = claves.generaCurp(ape_paterno,ape_materno,nombre,fecha_nacimiento,sexo,estado);
+			var rfc = document.getElementById('inpRFC').value = claves.generaRfc(ape_paterno,ape_materno,nombre,fecha_nacimiento,sexo);
+			// alert('Curp valida ' + claves.verificaCurp(curp));
+			// alert('Rfc valido: ' + claves.verificaRfc(rfc));
+		}
+	</script>
+	<hr/>
+	<label for='inpRFC'>RFC:</label>
+	<input id='inpRFC' name='rfc' type='text' size='20' readonly />
+	<label for='inpCURP'>CURP:</label>
+	<input id='inpCURP' name='curp' type='text' size='27' readonly />
+	<hr/>
+	<form>
+		<label for='inpRfcVal'>RFC para validar:</label>
+		<input id='inpRfcVal' name='rfc_val' type='text' size='20' maxlength='15' />
+		<button id='btnVerificaRfc'>Verificar Rfc</button>
+	</form>
+	<script>
+		var btnVerificaRfc = document.getElementById('btnVerificaRfc');
+		btnVerificaRfc.addEventListener('click', function(e) {
+			e.preventDefault();
+			var rfc = document.getElementById('inpRfcVal').value;
+			if (claves.verificaRfc(rfc,true)) {
+				alert('El RFC es válido');
+			} else {
+				alert('El RFC _NO_ es válido');
+			}
+		});
+	</script>
+	<hr/>
+	<form>
+		<label for='inpCurpVal'>CURP para validar:</label>
+		<input id='inpCurpVal' name='curp_val' type='text' size='30' maxlength='20' />
+		<button id='btnVerificaCurp'>Verificar Curp</button>
+	</form>
+	<script>
+		var btnVerificaCurp = document.getElementById('btnVerificaCurp');
+		btnVerificaCurp.addEventListener('click', function(e) {
+			e.preventDefault();
+			var curp = document.getElementById('inpCurpVal').value;
+			if (claves.verificaCurp(curp,true)) {
+				alert('La CURP es válida');
+			} else {
+				alert('La CURP _NO_ es válida');
+			}
+		});
+	</script>
+</body>
+</html>
